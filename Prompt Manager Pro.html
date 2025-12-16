@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Manager Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            height: 90vh;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #667eea;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h1 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: #bdc3c7;
+        }
+
+        .templates-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .template-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .template-item:hover {
+            background: rgba(255,255,255,0.2);
+            border-left-color: #667eea;
+        }
+
+        .template-item.active {
+            background: #667eea;
+            border-left-color: #fff;
+        }
+
+        .template-item-name {
+            font-size: 13px;
+            font-weight: 500;
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .template-delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+
+        .template-item:hover .template-delete-btn {
+            opacity: 1;
+        }
+
+        .sidebar-footer {
+            padding: 15px;
+            border-top: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            padding: 20px 30px;
+            background: white;
+            border-bottom: 2px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar h2 {
+            color: #2c3e50;
+            font-size: 22px;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-secondary {
+            padding: 10px 16px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 12px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-secondary:hover {
+            background: #d5dbdb;
+            border-color: #95a5a6;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .form-section {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .preview-section {
+            flex: 0 0 380px;
+            padding: 30px;
+            background: white;
+            border-left: 2px solid #ecf0f1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 12px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .preview-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .preview-content {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #34495e;
+            font-family: 'Menlo', 'Monaco', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #95a5a6;
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .stat-card-label {
+            font-size: 11px;
+            color: #95a5a6;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-card-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .btn-danger {
+            padding: 10px 16px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .copy-btn {
+            width: 100%;
+            padding: 12px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #27ae60;
+        }
+
+        .copy-success {
+            background: #27ae60;
+        }
+
+        .tag-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            min-height: 40px;
+        }
+
+        .tag {
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tag-input input {
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 100px;
+            font-size: 13px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2ecc71;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+            max-width: 300px;
+            word-break: break-word;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .scroll-hint {
+            font-size: 11px;
+            color: #95a5a6;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .modal-form-group {
+            margin-bottom: 15px;
+        }
+
+        .modal-form-label {
+            display: block;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .modal-form-input, .modal-form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        .modal-form-textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: 'Menlo', 'Monaco', monospace;
+        }
+
+        .export-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 11px;
+            height: 300px;
+            resize: vertical;
+            background: #f8f9fa;
+        }
+
+        .import-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 11px;
+            height: 300px;
+            resize: vertical;
+        }
+
+        .modal-description {
+            color: #34495e;
+            margin-bottom: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 1024px) {
+            .preview-section {
+                flex: 0 0 320px;
+            }
+
+            .container {
+                height: 95vh;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .sidebar {
+                width: 100%;
+                min-height: 150px;
+                flex-direction: row;
+            }
+
+            .templates-list {
+                overflow-x: auto;
+                overflow-y: hidden;
+                display: flex;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .template-item {
+                margin: 0;
+                white-space: nowrap;
+                flex-shrink: 0;
+                min-width: 120px;
+            }
+
+            .content-area {
+                flex-direction: column;
+            }
+
+            .preview-section {
+                flex: 0 0 250px;
+                border-left: none;
+                border-top: 2px solid #ecf0f1;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar-footer {
+                flex-direction: column;
+            }
+
+            .btn-primary {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>📋 AI 프롬프트</h1>
+                <p>템플릿 관리자</p>
+            </div>
+
+            <div class="templates-list" id="templatesList">
+                <div class="empty-state" style="padding: 20px; text-align: center;">
+                    <p style="font-size: 12px;">템플릿을 생성해보세요!</p>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button class="btn-primary" onclick="addNewTemplate()">+ 템플릿</button>
+                <button class="btn-primary" onclick="openAddFieldModal()" style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);">+ 항목</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="top-bar">
+                <h2 id="templateTitle">프롬프트 템플릿 관리</h2>
+                <div class="top-bar-actions">
+                    <button class="btn-secondary" onclick="openExportModal()">📥 JSON 내보내기</button>
+                    <button class="btn-secondary" onclick="openImportModal()">📤 JSON 가져오기</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="form-section" id="formSection">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <p>새 템플릿을 만들거나 기존 템플릿을 선택하세요</p>
+                    </div>
+                </div>
+
+                <div class="preview-section" id="previewSection">
+                    <div style="padding: 20px; text-align: center; color: #95a5a6;">
+                        <p style="font-size: 12px;">프리뷰가 표시됩니다</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <div class="modal-header">템플릿 삭제 확인</div>
+            <p style="color: #34495e; margin-bottom: 20px;">정말로 이 템플릿을 삭제하시겠습니까?</p>
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="cancelDelete()">취소</button>
+                <button class="btn-danger" onclick="confirmDelete()">삭제</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <div class="modal-header">📥 JSON 내보내기</div>
+            <p class="modal-description">아래 JSON 텍스트를 복사하여 메모장에 붙여넣은 후 <code>.json</code> 확장자로 저장하세요.</p>
+            <textarea id="exportTextarea" class="export-textarea" readonly></textarea>
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="closeExportModal()">닫기</button>
+                <button class="btn-primary" onclick="copyExportJSON()">📋 전체 복사</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="importModal">
+        <div class="modal-content">
+            <div class="modal-header">📤 JSON 가져오기</div>
+            <p class="modal-description">저장된 JSON 파일의 내용을 복사하여 아래에 붙여넣은 후 "불러오기" 버튼을 클릭하세요.</p>
+            <textarea id="importTextarea" class="import-textarea" placeholder="JSON 텍스트를 여기에 붙여넣으세요..."></textarea>
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="closeImportModal()">취소</button>
+                <button class="btn-primary" onclick="loadFromImportModal()">불러오기</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="addFieldModal">
+        <div class="modal-content">
+            <div class="modal-header">✨ 새로운 항목 추가</div>
+            <p style="color: #34495e; margin-bottom: 15px; font-size: 12px;">모든 템플릿에 추가될 새 항목을 입력하세요</p>
+            
+            <div class="modal-form-group">
+                <label class="modal-form-label">항목 이름 (영문)</label>
+                <input type="text" class="modal-form-input" id="newFieldName" placeholder="예: custom_field" onkeyup="this.value = this.value.replace(/[^a-z0-9_]/g, '')">
+            </div>
+
+            <div class="modal-form-group">
+                <label class="modal-form-label">항목 라벨 (한글)</label>
+                <input type="text" class="modal-form-input" id="newFieldLabel" placeholder="예: 커스텀 항목">
+            </div>
+
+            <div class="modal-form-group">
+                <label class="modal-form-label">기본값</label>
+                <textarea class="modal-form-textarea" id="newFieldDefault" placeholder="이 항목의 기본값을 입력하세요"></textarea>
+            </div>
+
+            <div style="background: #fffbeb; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b; margin-bottom: 20px; font-size: 12px; color: #78350f;">
+                <strong>⚠️ 주의:</strong> 항목명은 영문 소문자, 숫자, 언더스코어(_)만 사용 가능합니다.
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="cancelAddField()">취소</button>
+                <button class="btn-primary" onclick="confirmAddField()">항목 추가</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let customFields = [];
+        let inMemoryStorage = { promptManagerSettings: null };
+        
+        const defaultTemplates = [
+            {
+                id: 1, name: "블로그 작성", role: "전문 블로거", goal: "독자들을 위한 고품질 콘텐츠 작성",
+                audience: "기술 블로그 독자", task_type: "작성", input_desc: "주제, 키워드, 목표 독자층",
+                output_format: "마크다운 형식", tone: "전문적이면서 친근한", length_constraints: "1500~2000단어",
+                extra_instructions: "SEO 최적화 필수, 이미지 설명 포함", tags: ["블로그", "콘텐츠"], topic: ""
+            },
+            {
+                id: 2, name: "코드 리뷰", role: "경험 많은 코드 리뷰어", goal: "코드 품질 향상 및 버그 사전 방지",
+                audience: "개발팀 멤버", task_type: "코드리뷰", input_desc: "리뷰할 코드 스니펫 또는 파일",
+                output_format: "구조화된 피드백 리스트", tone: "건설적이고 존중하는", length_constraints: "명시적 제약 없음",
+                extra_instructions: "성능, 보안, 가독성 관점에서 분석", tags: ["개발", "코드"], topic: ""
+            },
+            {
+                id: 3, name: "프로그램 소스코드", role: "숙련된 소프트웨어 엔지니어", goal: "요구사항에 맞는 고품질 코드 작성",
+                audience: "개발자", task_type: "코드리뷰", input_desc: "프로그래밍 언어, 필요한 기능, 제약사항",
+                output_format: "완전한 코드 블록", tone: "전문적이고 상세한", length_constraints: "제약 없음",
+                extra_instructions: "주석 포함, 에러 처리 필수, 효율적인 알고리즘", tags: ["코드", "개발", "프로그래밍"], topic: ""
+            },
+            {
+                id: 4, name: "시나리오 대본", role: "창의적인 시나리오 작가", goal: "매력적인 스토리와 대사 작성",
+                audience: "영상제작자, 배우", task_type: "시나리오", input_desc: "장르, 주요 캐릭터, 줄거리 개요, 러닝타임",
+                output_format: "마크다운 시나리오 형식", tone: "창의적이고 감정적", length_constraints: "분량에 따라 가변",
+                extra_instructions: "캐릭터 성격 일관성 유지, 자연스러운 대사", tags: ["시나리오", "창의", "스크립트"], topic: ""
+            },
+            {
+                id: 5, name: "그림 생성 요청", role: "프롬프트 엔지니어", goal: "AI 이미지 생성을 위한 정확한 지시사항 작성",
+                audience: "이미지 생성 AI 사용자", task_type: "기획", input_desc: "원하는 이미지의 주제, 스타일, 분위기, 해상도",
+                output_format: "상세한 프롬프트 텍스트", tone: "상세하고 구체적", length_constraints: "짧고 명확하게",
+                extra_instructions: "구체적 형용사 사용, 스타일 명시, 화질 지정", tags: ["이미지", "AI", "그림"], topic: ""
+            },
+            {
+                id: 6, name: "지원서 (자기소개서)", role: "경험 많은 취업 컨설턴트", goal: "채용담당자의 마음을 사로잡는 자기소개서 작성",
+                audience: "취업 준비생", task_type: "작성", input_desc: "지원 기업명, 직무, 개인 경력/특기, 지원 동기",
+                output_format: "마크다운 형식 문서", tone: "전문적이면서 따뜻한", length_constraints: "800~1000단어",
+                extra_instructions: "개인의 강점 부각, 감정 표현, 구체적 사례 포함", tags: ["지원서", "취업", "자소서"], topic: ""
+            },
+            {
+                id: 12, name: "기타", role: "", goal: "", audience: "", task_type: "기타", input_desc: "",
+                output_format: "", tone: "중립적", length_constraints: "", extra_instructions: "자유롭게 커스터마이징하세요",
+                tags: ["커스텀"], topic: ""
+            }
+        ];
+
+        let templates = JSON.parse(JSON.stringify(defaultTemplates));
+        let currentTemplateId = null;
+        let deleteTargetId = null;
+
+        function init() {
+            loadSettings();
+            renderTemplatesList();
+            if (templates.length > 0) selectTemplate(templates[0].id);
+        }
+
+        function loadSettings() {
+            const saved = inMemoryStorage.promptManagerSettings;
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    templates = data.templates || JSON.parse(JSON.stringify(defaultTemplates));
+                    customFields = data.customFields || [];
+                    addCustomFieldsToTemplates();
+                } catch (e) {
+                    console.error('[ERROR]', e);
+                }
+            }
+        }
+
+        function saveSettings() {
+            try {
+                inMemoryStorage.promptManagerSettings = JSON.stringify({
+                    templates: templates,
+                    customFields: customFields,
+                    version: '1.0',
+                    savedAt: new Date().toISOString()
+                });
+                showToast('💾 설정이 저장되었습니다');
+            } catch (e) {
+                showToast('⚠️ 저장 실패');
+            }
+        }
+
+        function addCustomFieldsToTemplates() {
+            templates.forEach(template => {
+                customFields.forEach(field => {
+                    if (!(field.name in template)) {
+                        template[field.name] = field.default || '';
+                    }
+                });
+            });
+        }
+
+        function renderTemplatesList() {
+            const list = document.getElementById('templatesList');
+            list.innerHTML = templates.length === 0 
+                ? '<div class="empty-state" style="padding: 20px;"><p style="font-size: 12px;">템플릿을 생성해보세요!</p></div>'
+                : templates.map(t => `
+                    <div class="template-item ${t.id === currentTemplateId ? 'active' : ''}" onclick="selectTemplate(${t.id})">
+                        <span class="template-item-name">${t.name}</span>
+                        <button class="template-delete-btn" onclick="deleteTemplate(${t.id}, event)">삭제</button>
+                    </div>
+                `).join('');
+        }
+
+        function selectTemplate(id) {
+            currentTemplateId = id;
+            renderTemplatesList();
+            renderForm();
+            updatePreview();
+        }
+
+        function renderForm() {
+            const template = templates.find(t => t.id === currentTemplateId);
+            if (!template) return;
+
+            const taskOptions = ['리서치', '정리', '요약', '코드리뷰', '기획', '스크립트', '시나리오', '번역', '분석', '기타'];
+            const toneOptions = ['캐주얼', '전문적', '친근한', '포멀', '유머러스', '중립적'];
+
+            let formHTML = `
+                <div class="form-group">
+                    <label class="form-label">📌 템플릿 이름</label>
+                    <input type="text" class="form-input" value="${escapeAttr(template.name)}" onchange="updateTemplate('name', this.value)" onkeyup="updatePreview()">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">🎭 역할 (Role)</label>
+                        <input type="text" class="form-input" value="${escapeAttr(template.role)}" onchange="updateTemplate('role', this.value)" onkeyup="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🎯 목표 (Goal)</label>
+                        <input type="text" class="form-input" value="${escapeAttr(template.goal)}" onchange="updateTemplate('goal', this.value)" onkeyup="updatePreview()">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">👥 대상 (Audience)</label>
+                        <input type="text" class="form-input" value="${escapeAttr(template.audience)}" onchange="updateTemplate('audience', this.value)" onkeyup="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🔧 작업 유형</label>
+                        <select class="form-select" onchange="updateTemplate('task_type', this.value); updatePreview()">
+                            ${taskOptions.map(opt => `<option ${template.task_type === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">📥 입력 설명</label>
+                    <textarea class="form-textarea" onchange="updateTemplate('input_desc', this.value)" onkeyup="updatePreview()">${escapeHtml(template.input_desc)}</textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">📤 출력 형식</label>
+                        <input type="text" class="form-input" value="${escapeAttr(template.output_format)}" onchange="updateTemplate('output_format', this.value)" onkeyup="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">💬 톤</label>
+                        <select class="form-select" onchange="updateTemplate('tone', this.value); updatePreview()">
+                            ${toneOptions.map(opt => `<option ${template.tone === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">📏 길이/제약</label>
+                    <input type="text" class="form-input" value="${escapeAttr(template.length_constraints)}" onchange="updateTemplate('length_constraints', this.value)" onkeyup="updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">⚙️ 추가 지시사항</label>
+                    <textarea class="form-textarea" onchange="updateTemplate('extra_instructions', this.value)" onkeyup="updatePreview()">${escapeHtml(template.extra_instructions)}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">🏷️ 태그</label>
+                    <div class="tag-input">
+                        ${template.tags.map(tag => `<div class="tag">${escapeHtml(tag)}<span class="tag-remove" onclick="removeTag('${tag}')">×</span></div>`).join('')}
+                        <input type="text" placeholder="태그 추가..." onkeypress="addTag(event, this)">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">❓ 최종 질문/주제</label>
+                    <textarea class="form-textarea" onchange="updateTemplate('topic', this.value)" onkeyup="updatePreview()">${escapeHtml(template.topic)}</textarea>
+                </div>
+            `;
+
+            customFields.forEach(field => {
+                const value = template[field.name] || '';
+                formHTML += `
+                    <div class="form-group">
+                        <label class="form-label">✨ ${field.label}</label>
+                        <textarea class="form-textarea" onchange="updateTemplate('${field.name}', this.value)" onkeyup="updatePreview()">${escapeHtml(value)}</textarea>
+                    </div>
+                `;
+            });
+
+            document.getElementById('formSection').innerHTML = formHTML;
+            document.getElementById('templateTitle').textContent = template.name || '무제';
+        }
+
+        function updateTemplate(field, value) {
+            const template = templates.find(t => t.id === currentTemplateId);
+            if (template) {
+                template[field] = value;
+                saveSettings();
+                updatePreview();
+            }
+        }
+
+        function addTag(event, input) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const tag = input.value.trim();
+                const template = templates.find(t => t.id === currentTemplateId);
+                if (tag && !template.tags.includes(tag)) {
+                    template.tags.push(tag);
+                    saveSettings();
+                    renderForm();
+                    updatePreview();
+                }
+                input.value = '';
+            }
+        }
+
+        function removeTag(tag) {
+            const template = templates.find(t => t.id === currentTemplateId);
+            template.tags = template.tags.filter(t => t !== tag);
+            saveSettings();
+            renderForm();
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const template = templates.find(t => t.id === currentTemplateId);
+            if (!template) return;
+
+            let prompt = `【AI 프롬프트】\n\n📌 역할: ${template.role}\n🎯 목표: ${template.goal}\n👥 대상: ${template.audience}\n🔧 작업: ${template.task_type}\n\n`;
+            prompt += `📥 입력\n━━━━━━━━━━━━━━━━\n${template.input_desc}\n\n📤 출력\n━━━━━━━━━━━━━━━━\n형식: ${template.output_format}\n톤: ${template.tone}\n길이: ${template.length_constraints}\n\n`;
+
+            if (template.extra_instructions) prompt += `⚙️ 추가 지시사항\n━━━━━━━━━━━━━━━━\n${template.extra_instructions}\n\n`;
+
+            customFields.forEach(field => {
+                if (template[field.name]) prompt += `✨ ${field.label}\n━━━━━━━━━━━━━━━━\n${template[field.name]}\n\n`;
+            });
+
+            if (template.tags.length > 0) prompt += `🏷️ 태그: ${template.tags.join(', ')}\n\n`;
+            if (template.topic) prompt += `❓ 질문\n━━━━━━━━━━━━━━━━\n${template.topic}\n`;
+
+            const stats = {
+                templates: templates.length,
+                fields: 9 + customFields.length,
+                tags: template.tags.length,
+                wordCount: (template.role + template.goal + template.audience + template.input_desc + template.extra_instructions + template.topic).split(/\s+/).filter(w => w).length
+            };
+
+            const statsHtml = `<div class="stats-grid">
+                <div class="stat-card"><div class="stat-card-label">총 템플릿</div><div class="stat-card-value">${stats.templates}</div></div>
+                <div class="stat-card"><div class="stat-card-label">항목 수</div><div class="stat-card-value">${stats.fields}</div></div>
+                <div class="stat-card"><div class="stat-card-label">태그</div><div class="stat-card-value">${stats.tags}</div></div>
+                <div class="stat-card"><div class="stat-card-label">단어 수</div><div class="stat-card-value">${stats.wordCount}</div></div>
+            </div>`;
+
+            document.getElementById('previewSection').innerHTML = statsHtml + `
+                <div style="border-top: 1px solid #ecf0f1; padding-top: 20px;">
+                    <div class="preview-title">📋 생성된 프롬프트</div>
+                    <button class="copy-btn" onclick="copyPrompt()">📋 프롬프트 복사</button>
+                    <div class="preview-content">${escapeHtml(prompt)}</div>
+                    <div class="scroll-hint">프롬프트가 길 경우 스크롤하여 확인</div>
+                </div>
+            `;
+
+            window.currentPrompt = prompt;
+        }
+
+        function copyPrompt() {
+            if (!window.currentPrompt) {
+                showToast('복사할 프롬프트가 없습니다');
+                return;
+            }
+
+            const textarea = document.createElement('textarea');
+            textarea.value = window.currentPrompt;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            
+            textarea.select();
+            const success = document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            if (success) {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = '✅ 복사됨!';
+                btn.classList.add('copy-success');
+                showToast('✅ 프롬프트가 복사되었습니다');
+                setTimeout(() => {
+                    btn.textContent = '📋 프롬프트 복사';
+                    btn.classList.remove('copy-success');
+                }, 2000);
+            } else {
+                showToast('⚠️ 복사 실패');
+            }
+        }
+
+        function addNewTemplate() {
+            const newId = Math.max(...templates.map(t => t.id), 0) + 1;
+            const newTemplate = {
+                id: newId, name: `새 템플릿 ${newId}`, role: "", goal: "", audience: "",
+                task_type: "리서치", input_desc: "", output_format: "", tone: "전문적",
+                length_constraints: "", extra_instructions: "", tags: [], topic: ""
+            };
+            customFields.forEach(field => newTemplate[field.name] = field.default || '');
+            templates.push(newTemplate);
+            saveSettings();
+            renderTemplatesList();
+            selectTemplate(newId);
+            showToast('✅ 새 템플릿이 생성되었습니다!');
+        }
+
+        function openAddFieldModal() {
+            document.getElementById('addFieldModal').classList.add('active');
+            document.getElementById('newFieldName').value = '';
+            document.getElementById('newFieldLabel').value = '';
+            document.getElementById('newFieldDefault').value = '';
+            document.getElementById('newFieldName').focus();
+        }
+
+        function confirmAddField() {
+            const name = document.getElementById('newFieldName').value.trim();
+            const label = document.getElementById('newFieldLabel').value.trim();
+            const defaultValue = document.getElementById('newFieldDefault').value.trim();
+
+            if (!name) { showToast('⚠️ 항목 이름을 입력하세요'); return; }
+            if (!label) { showToast('⚠️ 항목 라벨을 입력하세요'); return; }
+            if (customFields.some(f => f.name === name)) { showToast('⚠️ 이미 존재하는 항목 이름입니다'); return; }
+            if (['name', 'role', 'goal', 'audience', 'task_type', 'input_desc', 'output_format', 'tone', 'length_constraints', 'extra_instructions', 'tags', 'topic', 'id'].includes(name)) {
+                showToast('⚠️ 예약된 항목 이름입니다'); return;
+            }
+
+            customFields.push({ name: name, label: label, default: defaultValue });
+            templates.forEach(template => template[name] = defaultValue);
+            saveSettings();
+            cancelAddField();
+            renderForm();
+            updatePreview();
+            showToast(`✅ '${label}' 항목이 추가되었습니다!`);
+        }
+
+        function cancelAddField() {
+            document.getElementById('addFieldModal').classList.remove('active');
+        }
+
+        function deleteTemplate(id, event) {
+            event.stopPropagation();
+            deleteTargetId = id;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function confirmDelete() {
+            templates = templates.filter(t => t.id !== deleteTargetId);
+            saveSettings();
+            document.getElementById('deleteModal').classList.remove('active');
+            if (currentTemplateId === deleteTargetId && templates.length > 0) {
+                selectTemplate(templates[0].id);
+            } else if (templates.length === 0) {
+                currentTemplateId = null;
+                document.getElementById('formSection').innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><p>새 템플릿을 만들거나 기존 템플릿을 선택하세요</p></div>';
+            }
+            renderTemplatesList();
+            showToast('✅ 템플릿이 삭제되었습니다');
+        }
+
+        function cancelDelete() {
+            document.getElementById('deleteModal').classList.remove('active');
+        }
+
+        function openExportModal() {
+            try {
+                const data = {
+                    version: '1.0',
+                    exportedAt: new Date().toISOString(),
+                    templates: templates,
+                    customFields: customFields
+                };
+                const dataStr = JSON.stringify(data, null, 2);
+                document.getElementById('exportTextarea').value = dataStr;
+                document.getElementById('exportModal').classList.add('active');
+            } catch (error) {
+                showToast('⚠️ JSON 생성 실패');
+            }
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.remove('active');
+        }
+
+        function copyExportJSON() {
+            const textarea = document.getElementById('exportTextarea');
+            textarea.select();
+            const success = document.execCommand('copy');
+            
+            if (success) {
+                showToast('✅ JSON이 복사되었습니다. 메모장에 붙여넣기 후 .json으로 저장하세요.');
+                const btn = event.target;
+                btn.textContent = '✅ 복사됨!';
+                btn.style.background = '#27ae60';
+                setTimeout(() => {
+                    btn.textContent = '📋 전체 복사';
+                    btn.style.background = '';
+                }, 2000);
+            } else {
+                showToast('⚠️ 복사 실패');
+            }
+        }
+
+        function openImportModal() {
+            document.getElementById('importTextarea').value = '';
+            document.getElementById('importModal').classList.add('active');
+            document.getElementById('importTextarea').focus();
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').classList.remove('active');
+        }
+
+        function loadFromImportModal() {
+            try {
+                const jsonText = document.getElementById('importTextarea').value.trim();
+                
+                if (!jsonText) {
+                    showToast('⚠️ JSON 텍스트를 입력하세요');
+                    return;
+                }
+
+                const data = JSON.parse(jsonText);
+                
+                if (!data.templates || !Array.isArray(data.templates)) {
+                    showToast('⚠️ 유효하지 않은 JSON 형식입니다');
+                    return;
+                }
+
+                templates = data.templates;
+                customFields = data.customFields || [];
+                addCustomFieldsToTemplates();
+                saveSettings();
+                renderTemplatesList();
+                
+                if (templates.length > 0) {
+                    selectTemplate(templates[0].id);
+                }
+                
+                closeImportModal();
+                showToast(`✅ ${templates.length}개의 템플릿이 불러워졌습니다`);
+            } catch (error) {
+                showToast('⚠️ JSON 파싱 오류: ' + error.message);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function escapeAttr(text) {
+            return String(text).replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
+
+        init();
+    </script>
+</body>
+</html>
